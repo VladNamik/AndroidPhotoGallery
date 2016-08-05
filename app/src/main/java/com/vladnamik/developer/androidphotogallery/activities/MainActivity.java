@@ -28,13 +28,13 @@ public class MainActivity extends AppCompatActivity {
     private static final String MAIN_ACTIVITY_LOG_TAG = "MainActivity";
 
     private NumberPicker pageNumberPicker;
-    private int pageMinValue = 1;
-    private int pageMaxValue = 1000;
+    private final int pageMinValue = 1;
+    private final int pageMaxValue = 1000;
 
     private ImageAPI service;
     private PageCallBack pageCallBack;
     private ImageViewsListAdapter adapterForImages;
-    private List<Photo> photos = new ArrayList<>();
+    private final List<Photo> photos = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,9 +100,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class PageCallBack implements Callback<Page> {
-        private Context context;
-        private List<Photo> photos;
-        private ImageViewsListAdapter adapterForImages;
+        private final Context context;
+        private final List<Photo> photos;
+        private final ImageViewsListAdapter adapterForImages;
 
         PageCallBack(Context context, List<Photo> photos, ImageViewsListAdapter adapterForImages) {
             this.context = context;

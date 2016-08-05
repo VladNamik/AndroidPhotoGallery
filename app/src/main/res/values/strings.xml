@@ -4,5 +4,6 @@
     <string name="activity_main_left_arrow_content_description">previous page</string>
     <string name="activity_main_right_arrow_content_description">next page</string>
     <string name="image_item_image_content_description">click to see full size</string>
+    <string name="activity_image_image_content_description">full size image</string>
 
 </resources>

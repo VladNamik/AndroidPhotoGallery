@@ -13,6 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
-        android:contentDescription="Full image"
+        android:contentDescription="@string/activity_image_image_content_description"
         android:scaleType="fitCenter" />
 </RelativeLayout>

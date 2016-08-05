@@ -20,7 +20,7 @@ import java.util.List;
 
 public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
     private static final String ADAPTER_LOG_TAG = "ImageViewsListAdapter";
-    private Context context;
+    private final Context context;
 
     public ImageViewsListAdapter(Context context, List<Photo> photos) {
         super(context, R.layout.image_item, photos);
@@ -55,7 +55,7 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
      * Обработчик нажатия на картинку
      */
     private class OnImageClickListener implements View.OnClickListener {
-        private String imageURL;
+        private final String imageURL;
 
         private OnImageClickListener(String imageURL) {
             this.imageURL = imageURL;
