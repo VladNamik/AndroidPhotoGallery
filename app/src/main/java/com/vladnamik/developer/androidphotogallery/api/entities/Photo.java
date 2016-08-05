@@ -1,9 +1,10 @@
-package com.vladnamik.developer.androidphotogallery.service;
+package com.vladnamik.developer.androidphotogallery.api.entities;
 
 
 /**
  * One photo from api.500px.com
  */
+@SuppressWarnings("unused")
 public class Photo {
     private String name;
     private String image_url;

@@ -1,10 +1,11 @@
-package com.vladnamik.developer.androidphotogallery.service;
+package com.vladnamik.developer.androidphotogallery.api.entities;
 
 import java.util.List;
 
 /**
  * One page from api.500px.com
  */
+@SuppressWarnings("unused")
 public class Page {
     private List<Photo> photos;
     private int current_page;
