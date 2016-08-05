@@ -2,6 +2,7 @@ package com.vladnamik.developer.androidphotogallery.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +13,6 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 import com.vladnamik.developer.androidphotogallery.R;
-import com.vladnamik.developer.androidphotogallery.activities.ImageActivity;
 import com.vladnamik.developer.androidphotogallery.api.entities.Photo;
 
 import java.util.List;
@@ -46,7 +46,7 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
         }
 
         Picasso.with(context).load(photo.getImageURL()).into(imageView);
-        imageView.setOnClickListener(new OnImageClickListener(photo.getImageURL()));
+        imageView.setOnClickListener(new OnImageClickListener(photo.getURL()));
 
         return convertView;
     }
@@ -55,16 +55,15 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
      * Обработчик нажатия на картинку
      */
     private class OnImageClickListener implements View.OnClickListener {
-        private final String imageURL;
+        private final String url;
 
-        private OnImageClickListener(String imageURL) {
-            this.imageURL = imageURL;
+        private OnImageClickListener(String url) {
+            this.url = url;
         }
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(v.getContext(), ImageActivity.class);
-            intent.putExtra("image_url", imageURL);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             context.startActivity(intent);
         }
     }
