@@ -1,6 +1,7 @@
 package com.vladnamik.developer.androidphotogallery.activities;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private final int pageMinValue = 1;
     private final int pageMaxValue = 1000;
 
+    private int currentPageValue;
+    private SharedPreferences mPrefs;
+
     private ImageAPI service;
     private PageCallBack pageCallBack;
     private ImageViewsListAdapter adapterForImages;
@@ -41,22 +45,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mPrefs = getPreferences(MODE_PRIVATE);
+        currentPageValue = mPrefs.getInt("current_page_value", pageMinValue);
+
         pageNumberPickerInit();
 
         adapterForPhotosInit();
 
-        //загружаем первую страницу
-        loadPage(pageMinValue);
+        loadPage(currentPageValue);
     }
 
     private void pageNumberPickerInit() {
         pageNumberPicker = (NumberPicker) findViewById(R.id.page_number_picker);
-        pageNumberPicker.setValue(pageMinValue);
         pageNumberPicker.setMinValue(pageMinValue);
         pageNumberPicker.setMaxValue(pageMaxValue);
+        pageNumberPicker.setValue(currentPageValue);
         pageNumberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                currentPageValue = newVal;
                 loadPage(newVal);
             }
         });
@@ -88,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     public void onPageLeftArrowClick(View view) {
         if (pageNumberPicker.getValue() != pageMinValue) {
             pageNumberPicker.setValue(pageNumberPicker.getValue() - 1);
+            currentPageValue--;
             loadPage(pageNumberPicker.getValue());
         }
     }
@@ -95,8 +103,17 @@ public class MainActivity extends AppCompatActivity {
     public void onPageRightArrowClick(View view) {
         if (pageNumberPicker.getValue() != pageMaxValue) {
             pageNumberPicker.setValue(pageNumberPicker.getValue() + 1);
+            currentPageValue++;
             loadPage(pageNumberPicker.getValue());
         }
+    }
+
+    protected void onPause() {
+        super.onPause();
+
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putInt("current_page_value", currentPageValue);
+        ed.apply();
     }
 
     private class PageCallBack implements Callback<Page> {
