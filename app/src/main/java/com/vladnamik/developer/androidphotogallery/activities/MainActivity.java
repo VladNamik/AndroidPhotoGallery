@@ -1,7 +1,6 @@
 package com.vladnamik.developer.androidphotogallery.activities;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private final int pageMaxValue = 1000;
 
     private int currentPageValue;
-    private SharedPreferences mPrefs;
 
     private ImageAPI service;
     private PageCallBack pageCallBack;
@@ -45,8 +43,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPrefs = getPreferences(MODE_PRIVATE);
-        currentPageValue = mPrefs.getInt("current_page_value", pageMinValue);
+        //current page value retrieving
+        if (savedInstanceState !=null) {
+            currentPageValue = savedInstanceState.getInt("current_page_value");
+        } else {
+            currentPageValue = pageMinValue;
+        }
 
         pageNumberPickerInit();
 
@@ -88,13 +90,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Call<Page> call = service.loadData(pageNumber);
-        //асинхронный вызов
+        //async call
         call.enqueue(pageCallBack);
     }
 
     public void onPageLeftArrowClick(View view) {
         if (pageNumberPicker.getValue() != pageMinValue) {
-            pageNumberPicker.setValue(pageNumberPicker.getValue() - 1);
+            pageNumberPicker.setValue(currentPageValue - 1);
             currentPageValue--;
             loadPage(pageNumberPicker.getValue());
         }
@@ -102,18 +104,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void onPageRightArrowClick(View view) {
         if (pageNumberPicker.getValue() != pageMaxValue) {
-            pageNumberPicker.setValue(pageNumberPicker.getValue() + 1);
+            pageNumberPicker.setValue(currentPageValue + 1);
             currentPageValue++;
             loadPage(pageNumberPicker.getValue());
         }
     }
 
-    protected void onPause() {
-        super.onPause();
-
-        SharedPreferences.Editor ed = mPrefs.edit();
-        ed.putInt("current_page_value", currentPageValue);
-        ed.apply();
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("current_page_value", currentPageValue);
     }
 
     private class PageCallBack implements Callback<Page> {
@@ -131,10 +130,10 @@ public class MainActivity extends AppCompatActivity {
         public void onResponse(Call<Page> call, Response<Page> response) {
             photos.clear();
 
-            //получаем данные из response
+            //getting data from response
             photos.addAll(response.body().getPhotos());
 
-            //обновляем adapter
+            //update adapter
             adapterForImages.notifyDataSetChanged();
 
             Log.d(MAIN_ACTIVITY_LOG_TAG, "end getting response");
