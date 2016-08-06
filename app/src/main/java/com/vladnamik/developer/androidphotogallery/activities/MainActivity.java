@@ -62,11 +62,14 @@ public class MainActivity extends AppCompatActivity {
         pageNumberPicker.setMinValue(pageMinValue);
         pageNumberPicker.setMaxValue(pageMaxValue);
         pageNumberPicker.setValue(currentPageValue);
-        pageNumberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+
+        pageNumberPicker.setOnScrollListener(new NumberPicker.OnScrollListener() {
             @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                currentPageValue = newVal;
-                loadPage(newVal);
+            public void onScrollStateChange(NumberPicker view, int scrollState) {
+                if (scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE){
+                    currentPageValue = view.getValue();
+                    loadPage(currentPageValue);
+                }
             }
         });
     }
