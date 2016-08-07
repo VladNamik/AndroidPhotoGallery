@@ -1,20 +1,24 @@
 package com.vladnamik.developer.androidphotogallery.activities;
 
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.NumberPicker;
 import android.widget.Toast;
 
 import com.vladnamik.developer.androidphotogallery.R;
 import com.vladnamik.developer.androidphotogallery.adapters.ImageViewsListAdapter;
-import com.vladnamik.developer.androidphotogallery.api.entities.Page;
 import com.vladnamik.developer.androidphotogallery.api.ImageAPI;
+import com.vladnamik.developer.androidphotogallery.api.entities.Page;
 import com.vladnamik.developer.androidphotogallery.api.entities.Photo;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,17 +30,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String MAIN_ACTIVITY_LOG_TAG = "MainActivity";
-
-    private NumberPicker pageNumberPicker;
     private final int pageMinValue = 1;
     private final int pageMaxValue = 1000;
-
+    private final List<Photo> photos = new ArrayList<>();
+    private NumberPicker pageNumberPicker;
     private int currentPageValue;
-
     private ImageAPI service;
     private PageCallBack pageCallBack;
     private ImageViewsListAdapter adapterForImages;
-    private final List<Photo> photos = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         pageNumberPicker.setMinValue(pageMinValue);
         pageNumberPicker.setMaxValue(pageMaxValue);
         pageNumberPicker.setValue(currentPageValue);
+        setNumberPickerTextColor(pageNumberPicker, ContextCompat.getColor(this, R.color.mainTextColor));
 
         pageNumberPicker.setOnScrollListener(new NumberPicker.OnScrollListener() {
             @Override
@@ -72,6 +74,27 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    //Set text color in NumberPicker object
+    private void setNumberPickerTextColor(NumberPicker numberPicker, int color) {
+        final int count = numberPicker.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = numberPicker.getChildAt(i);
+            if (child instanceof EditText) {
+                try {
+                    Field selectorWheelPaintField = numberPicker.getClass()
+                            .getDeclaredField("mSelectorWheelPaint");
+                    selectorWheelPaintField.setAccessible(true);
+                    ((Paint) selectorWheelPaintField.get(numberPicker)).setColor(color);
+                    ((EditText) child).setTextColor(color);
+                    numberPicker.invalidate();
+                    return;
+                } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
+                    Log.w(MAIN_ACTIVITY_LOG_TAG, e);
+                }
+            }
+        }
     }
 
     private void adapterForPhotosInit() {
