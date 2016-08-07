@@ -1,15 +1,22 @@
 package com.vladnamik.developer.androidphotogallery.activities;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.vladnamik.developer.androidphotogallery.R;
@@ -30,14 +37,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String MAIN_ACTIVITY_LOG_TAG = "MainActivity";
+    private static final String INTERNET_CONNECTION_EXCEPTION_MESSAGE = "That seems like you have no internet connection";
+    private static final int LOADER_HEIGHT = 80;
+
     private final int pageMinValue = 1;
     private final int pageMaxValue = 1000;
     private final List<Photo> photos = new ArrayList<>();
+
     private NumberPicker pageNumberPicker;
     private int currentPageValue;
     private ImageAPI service;
     private PageCallBack pageCallBack;
     private ImageViewsListAdapter adapterForImages;
+    private Dialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +116,33 @@ public class MainActivity extends AppCompatActivity {
         imageViewParentView.setAdapter(adapterForImages);
     }
 
+    private Dialog getProgressDialog() {
+        if (progressDialog == null) {
+            progressDialog = new Dialog(this);
+            ProgressBar progressBar = new ProgressBar(this);
+
+            progressBar.setIndeterminateDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.progress_dialog_loader, null));
+            progressDialog.addContentView(progressBar, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LOADER_HEIGHT));
+
+            //set divider in dialog transparent
+            int dividerId = progressDialog.getContext().getResources()
+                    .getIdentifier("android:id/titleDivider", null, null);
+            View divider = progressDialog.findViewById(dividerId);
+            if (divider != null) {
+                divider.setBackgroundColor(Color.TRANSPARENT);
+            }
+
+            //set background color to dialog transparent
+            Window window = progressDialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+        }
+        return progressDialog;
+    }
+
     private void loadPage(int pageNumber) {
+        getProgressDialog().show();
         Log.d(MAIN_ACTIVITY_LOG_TAG, "trying to loadPage #" + pageNumber);
         if (service == null) {
             Retrofit retrofit = new Retrofit.Builder()
@@ -159,16 +197,36 @@ public class MainActivity extends AppCompatActivity {
             //getting data from response
             photos.addAll(response.body().getPhotos());
 
+            //delete after
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        Log.d(MAIN_ACTIVITY_LOG_TAG, "interrupted with message: " + e.getLocalizedMessage());
+                    }
+                }
+            });
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Log.d(MAIN_ACTIVITY_LOG_TAG, "interrupted with message: " + e.getLocalizedMessage());
+            }
+
             //update adapter
             adapterForImages.notifyDataSetChanged();
 
             Log.d(MAIN_ACTIVITY_LOG_TAG, "end getting response");
+            progressDialog.dismiss();
         }
 
         @Override
         public void onFailure(Call<Page> call, Throwable t) {
             Log.d(MAIN_ACTIVITY_LOG_TAG, "request ended with error " + t.getMessage());
-            Toast.makeText(context, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            progressDialog.dismiss();
+            Toast.makeText(context, INTERNET_CONNECTION_EXCEPTION_MESSAGE, Toast.LENGTH_LONG).show();
         }
     }
 
