@@ -1,55 +1,34 @@
 package com.vladnamik.developer.androidphotogallery.activities;
 
-import android.app.Dialog;
-import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.NumberPicker;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.vladnamik.developer.androidphotogallery.R;
-import com.vladnamik.developer.androidphotogallery.adapters.ImageViewsListAdapter;
-import com.vladnamik.developer.androidphotogallery.api.ImageAPI;
-import com.vladnamik.developer.androidphotogallery.api.entities.Page;
-import com.vladnamik.developer.androidphotogallery.api.entities.Photo;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final String MAIN_ACTIVITY_LOG_TAG = "MainActivity";
-    private static final String INTERNET_CONNECTION_EXCEPTION_MESSAGE = "That seems like you have no internet connection";
-    private static final int LOADER_HEIGHT = 80;
 
     private final int pageMinValue = 1;
     private final int pageMaxValue = 1000;
-    private final List<Photo> photos = new ArrayList<>();
+    private int currentPageValue;
 
     private NumberPicker pageNumberPicker;
-    private int currentPageValue;
-    private ImageAPI service;
-    private PageCallBack pageCallBack;
-    private ImageViewsListAdapter adapterForImages;
-    private Dialog progressDialog;
+    private ViewPager pager;
+    private MainFragmentPagerAdapter pagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,10 +44,11 @@ public class MainActivity extends AppCompatActivity {
 
         pageNumberPickerInit();
 
-        adapterForPhotosInit();
-
-        loadPage(currentPageValue);
+        pager = (ViewPager) findViewById(R.id.pager);
+        pagerAdapter = new MainFragmentPagerAdapter(getSupportFragmentManager());
+        pager.setAdapter(pagerAdapter);
     }
+
 
     private void pageNumberPickerInit() {
         pageNumberPicker = (NumberPicker) findViewById(R.id.page_number_picker);
@@ -109,55 +89,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void adapterForPhotosInit() {
-
-        adapterForImages = new ImageViewsListAdapter(this, photos);
-        GridView imageViewParentView = (GridView) findViewById(R.id.main_images_grid_view);
-        imageViewParentView.setAdapter(adapterForImages);
-    }
-
-    private Dialog getProgressDialog() {
-        if (progressDialog == null) {
-            progressDialog = new Dialog(this);
-            ProgressBar progressBar = new ProgressBar(this);
-
-            progressBar.setIndeterminateDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.progress_dialog_loader, null));
-            progressDialog.addContentView(progressBar, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LOADER_HEIGHT));
-
-            //set divider in dialog transparent
-            int dividerId = progressDialog.getContext().getResources()
-                    .getIdentifier("android:id/titleDivider", null, null);
-            View divider = progressDialog.findViewById(dividerId);
-            if (divider != null) {
-                divider.setBackgroundColor(Color.TRANSPARENT);
-            }
-
-            //set background color to dialog transparent
-            Window window = progressDialog.getWindow();
-            if (window != null) {
-                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            }
-        }
-        return progressDialog;
-    }
-
-    private void loadPage(int pageNumber) {
-        getProgressDialog().show();
-        Log.d(MAIN_ACTIVITY_LOG_TAG, "trying to loadPage #" + pageNumber);
-        if (service == null) {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(ImageAPI.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            service = retrofit.create(ImageAPI.class);
-            pageCallBack = new PageCallBack(this, photos, adapterForImages);
-        }
-
-        Call<Page> call = service.loadData(pageNumber);
-        //async call
-        call.enqueue(pageCallBack);
-    }
-
     public void onPageLeftArrowClick(View view) {
         if (pageNumberPicker.getValue() != pageMinValue) {
             pageNumberPicker.setValue(currentPageValue - 1);
@@ -179,54 +110,68 @@ public class MainActivity extends AppCompatActivity {
         outState.putInt("current_page_value", currentPageValue);
     }
 
-    private class PageCallBack implements Callback<Page> {
-        private final Context context;
-        private final List<Photo> photos;
-        private final ImageViewsListAdapter adapterForImages;
+    private int positionToPageNumber(int position) {
+        return position + pageMinValue;
+    }
 
-        PageCallBack(Context context, List<Photo> photos, ImageViewsListAdapter adapterForImages) {
-            this.context = context;
-            this.photos = photos;
-            this.adapterForImages = adapterForImages;
+    private int pageNumberToPosition(int pageNumber) {
+        return pageNumber - pageMinValue;
+    }
+
+    private void loadPage(int pageNumber) {
+        Log.d(MAIN_ACTIVITY_LOG_TAG, "loading page; current position is " + pageNumberToPosition(pageNumber));
+        pager.setCurrentItem(pageNumberToPosition(pageNumber));
+    }
+
+    private class MainFragmentPagerAdapter extends FragmentPagerAdapter {
+        private final FragmentManager mFragmentManager;
+
+        MainFragmentPagerAdapter(FragmentManager fm) {
+            super(fm);
+            mFragmentManager = fm;
         }
 
         @Override
-        public void onResponse(Call<Page> call, Response<Page> response) {
-            photos.clear();
+        public Fragment getItem(int position) {
+            PageFragment pageFragment = new PageFragment();
+            Bundle arguments = new Bundle();
 
-            //getting data from response
-            photos.addAll(response.body().getPhotos());
-
-            //delete after
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        Log.d(MAIN_ACTIVITY_LOG_TAG, "interrupted with message: " + e.getLocalizedMessage());
-                    }
-                }
-            });
-            t.start();
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                Log.d(MAIN_ACTIVITY_LOG_TAG, "interrupted with message: " + e.getLocalizedMessage());
+            int pageNumber = positionToPageNumber(position);
+            if (pageNumber < pageMinValue || pageNumber > pageMaxValue) {
+                pageNumber = pageMinValue;
             }
-
-            //update adapter
-            adapterForImages.notifyDataSetChanged();
-
-            Log.d(MAIN_ACTIVITY_LOG_TAG, "end getting response");
-            progressDialog.dismiss();
+            arguments.putInt(PageFragment.ARGUMENT_PAGE_NUMBER, pageNumber);
+            pageFragment.setArguments(arguments);
+            return pageFragment;
         }
 
         @Override
-        public void onFailure(Call<Page> call, Throwable t) {
-            Log.d(MAIN_ACTIVITY_LOG_TAG, "request ended with error " + t.getMessage());
-            progressDialog.dismiss();
-            Toast.makeText(context, INTERNET_CONNECTION_EXCEPTION_MESSAGE, Toast.LENGTH_LONG).show();
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            Log.d(MAIN_ACTIVITY_LOG_TAG, "set primary item; position is " + position);
+            super.setPrimaryItem(container, position, object);
+            currentPageValue = positionToPageNumber(position);
+            pageNumberPicker.setValue(currentPageValue);
+
+            PageFragment selectedFragment = pagerAdapter.getFragmentByPosition(pager, position);
+            if (selectedFragment != null) {
+                selectedFragment.startProgressDialogBeforeRequest();
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return pageMaxValue;
+        }
+
+        private PageFragment getFragmentByPosition(ViewGroup container, int position) {
+            return (PageFragment) mFragmentManager
+                    .findFragmentByTag(
+                            makeFragmentName(container.getId(), position)
+                    );
+        }
+
+        private String makeFragmentName(int viewId, long id) {
+            return "android:switcher:" + viewId + ":" + id;
         }
     }
 

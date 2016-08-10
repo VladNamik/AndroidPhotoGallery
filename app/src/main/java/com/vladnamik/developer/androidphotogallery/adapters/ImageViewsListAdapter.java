@@ -31,7 +31,7 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
     @Override
     public View getView(int position, View convertView, @NonNull ViewGroup parent) {
 
-        Log.d(ADAPTER_LOG_TAG, "trying to get view");
+        Log.d(ADAPTER_LOG_TAG, "start trying to get view");
 
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())
@@ -47,6 +47,8 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
 
         Picasso.with(context).load(photo.getImageURL()).into(imageView);
         imageView.setOnClickListener(new OnImageClickListener(photo.getURL()));
+
+        Log.d(ADAPTER_LOG_TAG, "end trying to get view");
 
         return convertView;
     }
