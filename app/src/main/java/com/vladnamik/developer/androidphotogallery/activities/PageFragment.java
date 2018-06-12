@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.vladnamik.developer.androidphotogallery.R;
 import com.vladnamik.developer.androidphotogallery.adapters.ImageViewsListAdapter;
+import com.vladnamik.developer.androidphotogallery.api.mock.PageLoaderMock;
 import com.vladnamik.developer.androidphotogallery.api.PageLoader;
 import com.vladnamik.developer.androidphotogallery.api.entities.Page;
 import com.vladnamik.developer.androidphotogallery.api.entities.Photo;
@@ -59,7 +60,7 @@ public class PageFragment extends Fragment {
         View view = inflater.inflate(R.layout.photos_fragment, null);
         adapterForPhotosInit(view);
 
-        PageLoader pageLoader = new PageLoader(new PageCallback(getActivity(), photos, adapterForImages));
+        PageLoader pageLoader = new PageLoaderMock(new PageCallback(getActivity(), photos, adapterForImages));
 
         pageLoader.loadPage(currentPageValue);
         return view;
@@ -102,7 +103,7 @@ public class PageFragment extends Fragment {
     private void adapterForPhotosInit(View mainView) {
 
         adapterForImages = new ImageViewsListAdapter(getActivity(), photos);
-        GridView imageViewParentView = (GridView) mainView.findViewById(R.id.main_images_grid_view);
+        GridView imageViewParentView = mainView.findViewById(R.id.main_images_grid_view);
         imageViewParentView.setAdapter(adapterForImages);
     }
 
@@ -132,7 +133,7 @@ public class PageFragment extends Fragment {
     }
 
 
-    private class PageCallback implements Callback<Page> {
+    public class PageCallback implements Callback<Page> {
         private final Context context;
         private final List<Photo> photos;
         private final ImageViewsListAdapter adapterForImages;
@@ -147,6 +148,11 @@ public class PageFragment extends Fragment {
         public void onResponse(Call<Page> call, Response<Page> response) {
             //getting data from response
             List<Photo> newPhotos = response.body().getPhotos();
+            onResponse(newPhotos);
+        }
+
+        public void onResponse(List<Photo> newPhotos)
+        {
             photos.clear();
 
             photos.addAll(newPhotos);

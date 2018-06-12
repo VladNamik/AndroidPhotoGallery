@@ -1,4 +1,4 @@
-package com.vladnamik.developer.androidphotogallery.api;
+package com.vladnamik.developer.androidphotogallery.api.px500;
 
 import com.vladnamik.developer.androidphotogallery.api.entities.Page;
 
