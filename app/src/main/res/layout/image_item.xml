@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<com.vladnamik.developer.androidphotogallery.views.ConstRatioImageView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/image_item_image_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="4dp">
-    <ImageView
-        android:id="@+id/image_item_image_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/image_item_image_content_description" />
-</LinearLayout>
+    android:padding="4dp"
+    android:scaleType="centerCrop"
+    android:adjustViewBounds="true"
+    android:contentDescription="@string/image_item_image_content_description" />

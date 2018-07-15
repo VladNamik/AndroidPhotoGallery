@@ -38,7 +38,7 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
                     .inflate(R.layout.image_item, null);
         }
 
-        ImageView imageView = (ImageView) convertView.findViewById(R.id.image_item_image_view);
+        ImageView imageView = (ImageView) convertView;
         Photo photo = getItem(position);
 
         if (photo == null) {
@@ -54,7 +54,7 @@ public class ImageViewsListAdapter extends ArrayAdapter<Photo> {
     }
 
     /**
-     * Обработчик нажатия на картинку
+     * On image click handler
      */
     private class OnImageClickListener implements View.OnClickListener {
         private final String url;
